@@ -638,6 +638,8 @@ const GameBoard = ({
   const [maxMovement, setMaxMovement] = useState(1);
   const [movement, setMovement] = useState(1);
   const [startTown, setStartTown] = useState();
+  const [phase, setPhase] = useState("starter");
+  const [turn, setTurn] = useState(1);
 
   //---utility variables
   const { enqueueSnackbar } = useSnackbar();
@@ -699,31 +701,10 @@ const GameBoard = ({
       if (game?.newPhase) {
         setActionComplete(false);
         setIsReady(false);
-        setIndicatorDialog(true);
         setAction("none");
-        setWillPvpBattle(false);
         saveData();
-        if (game?.phase == "movement" || game?.phase == "starter") {
-          if (game?.phase == "movement") {
-            setMusicEvent("movement");
-          }
-          setCanUseShop(false);
-          setTileToShow(false);
-        }
-        if (game.phase == "action") {
-          //checkForHeal();
-          setMusicEvent("action");
-          getShop();
-        }
+        setPhase("movement");
       }
-
-      if (game.moveOrder[game.moving] == id) {
-        setTurnToMove(true);
-        if (game?.phase == "movement") setStartTimer(true);
-      } else {
-        setTurnToMove(false);
-      }
-      console.log(game);
     });
     return () => socket.off("game-update-state");
   }, [socket, game]);
@@ -811,13 +792,10 @@ const GameBoard = ({
       if (numFainted == team.length) {
         sendPlayerHome();
       } else if (action == "gymchallenge") {
-        healTeam();
         setCanUseShop(true);
       } else {
         setCanUseShop(false);
       }
-
-      if (actionComplete) endTurn();
     }
   }, [actionComplete]);
 
@@ -913,19 +891,32 @@ const GameBoard = ({
 
   //end turn for movement and action
   const endTurn = () => {
-    if (game.phase == "movement") {
+    if (phase == "movement") {
       setStartTimer(false);
       setIsReady(true);
       setMovement(maxMovement);
-      socket.emit("game-end-turn");
-      checkForHeal();
+
       checkIfShop();
     } else {
+      setTurn((prev) => prev + 1);
       setSelected({ tile: "none", coord: { q: -100, r: 0, s: 100 } });
       setMovement(maxMovement);
       setIsReady(true);
-      socket.emit("game-end-turn");
     }
+
+    switch (phase) {
+      case "movement":
+        setPhase("action");
+        break;
+      case "action":
+        setPhase("movement");
+        break;
+    }
+    checkForHeal();
+    setActionComplete(false);
+    setIsReady(false);
+    setAction("none");
+    saveData();
   };
 
   //called whenever a player wants to start their action
@@ -996,7 +987,7 @@ const GameBoard = ({
   const checkIfShop = async () => {
     let tileName;
 
-    switch (game.phase) {
+    switch (phase) {
       case "movement":
         tileName = tileToShow.tile;
       case "action":
@@ -1011,7 +1002,10 @@ const GameBoard = ({
         tileName
     );
     const json = await res.json();
-    if (json.data.town) setCanUseShop(true);
+    if (json.data.town) {
+      setCanUseShop(true);
+      getShop();
+    }
   };
 
   //gets the coords of players current location to shift viewbox there on turn start
@@ -1040,7 +1034,7 @@ const GameBoard = ({
   //triggers when the take action button is clicked
   const actionButtonClick = () => {
     if (!willPvpBattle) {
-      switch (game.phase) {
+      switch (phase) {
         case "action":
           setCanInteract(true);
           setTileToShow(playerLocation);
@@ -1130,9 +1124,7 @@ const GameBoard = ({
   return (
     <Box>
       <ResourceBar
-        phase={game.phase}
-        turn={game.turn}
-        maxTurns={game.maxTurns}
+        turn={turn}
         money={money}
         candies={candies}
         bag={bag}
@@ -1142,7 +1134,7 @@ const GameBoard = ({
       <TestBoardComp
         tileDrawer={tileDrawer}
         actionComplete={actionComplete}
-        phase={game.phase}
+        phase={phase}
         playerLocation={playerLocation.coord}
         players={players}
         tileToShow={tileToShow}
@@ -1165,7 +1157,7 @@ const GameBoard = ({
         <Dashboard
           team={team}
           canUseShop={canUseShop}
-          game={game}
+          phase={phase}
           turnToMove={turnToMove}
           movement={movement}
           tileToShow={tileToShow}
@@ -1192,7 +1184,7 @@ const GameBoard = ({
         leaderboardDrawer={leaderboardDrawer}
         setLeaderboardDrawer={setLeaderboardDrawer}
         players={players}
-        game={game}
+        phase={phase}
         id={id}
         initiateTrade={initiateTrade}
       />
@@ -1240,19 +1232,6 @@ const GameBoard = ({
         setActionComplete={setActionComplete}
         setMusicEvent={setMusicEvent}
       />
-      <IndicatorDialog
-        round={game.turn}
-        phase={game.phase}
-        semi={game.semiTurn}
-        indicatorDialog={indicatorDialog}
-        setIndicatorDialog={setIndicatorDialog}
-      />
-      <PvpDialog
-        pvpDialog={pvpDialog}
-        setPvpDialog={setPvpDialog}
-        battleIndex={battleId}
-      />
-
       {tradeOffer ? (
         <TradeDialog
           tradeDialog={tradeDialog}

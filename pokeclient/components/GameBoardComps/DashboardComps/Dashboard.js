@@ -1,4 +1,4 @@
-import { Box, Grid, Typography } from "@mui/material";
+import { Box, Grid } from "@mui/material";
 import dynamic from "next/dynamic";
 import React from "react";
 import ActionArea from "./ActionArea";
@@ -10,7 +10,7 @@ const Dashboard = ({
   setLeaderboardDrawer,
   candies,
   team,
-  game,
+  phase,
   movement,
   turnToMove,
   moveToTile,
@@ -44,7 +44,7 @@ const Dashboard = ({
         </Grid>
         <Grid item container xs={5}>
           <ActionArea
-            game={game}
+            phase={phase}
             turnToMove={turnToMove}
             movement={movement}
             moveToTile={moveToTile}

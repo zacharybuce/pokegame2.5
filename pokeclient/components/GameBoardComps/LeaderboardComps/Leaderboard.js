@@ -5,7 +5,7 @@ import PlayerCard from "./PlayerCard";
 const Leaderboard = ({
   leaderboardDrawer,
   setLeaderboardDrawer,
-  game,
+  phase,
   players,
   id,
   initiateTrade,
@@ -20,7 +20,7 @@ const Leaderboard = ({
       {players.map((player) => (
         <PlayerCard
           player={player}
-          game={game}
+          phase={phase}
           isPlayer={player.name == id}
           initiateTrade={initiateTrade}
         />

@@ -19,7 +19,7 @@ const ActionButtons = ({
   playerLocation,
   actionButtonClick,
 }) => {
-  if (isReady || (!turnToMove && phase == "movement") || phase == "starter")
+  if (phase == "starter")
     return (
       <Grid
         item
@@ -34,7 +34,7 @@ const ActionButtons = ({
         </Alert>
       </Grid>
     );
-
+  console.log(phase);
   if (phase == "movement")
     return (
       <Grid
@@ -144,6 +144,7 @@ const ActionButtons = ({
       <Grid item xs={5}>
         <Button
           onClick={() => endTurn()}
+          disabled={!actionComplete}
           variant="contained"
           color="error"
           sx={{ width: "90%" }}

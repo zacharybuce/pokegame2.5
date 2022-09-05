@@ -4,7 +4,7 @@ import Sim from "pokemon-showdown";
 import Poke from "pokemon-showdown";
 import pokemonData from "../data/pokemon.json" assert { type: "json" };
 import saveData from "../data/savedata.json" assert { type: "json" };
-import { readFile, writeFile } from "fs/promises";
+import { writeFile } from "fs/promises";
 
 const Teams = Poke.Teams;
 const Dex = Poke.Dex;
@@ -360,32 +360,13 @@ const resetPlayerReady = () => {
 const nextPhase = () => {
   switch (game.phase) {
     case "starter":
-      game.phase = "movement";
+      game.phase = "adventure";
       game.turn += 1;
       setMoveOrder();
       safariEncounters = genSafariEncounters();
       players.forEach((player, index) => {
         players[index].inAction = false;
       });
-      break;
-    case "movement":
-      game.phase = "action";
-      if (game.turn != game.semiTurn) {
-        let order = game.moveOrder.slice();
-        order.reverse();
-        order.forEach((player) => {
-          checkForPvP(pIndex(player));
-        });
-      }
-      break;
-    case "action":
-      game.phase = "movement";
-      setMoveOrder();
-      game.turn += 1;
-      game.moving = 0;
-      inBattle = [];
-      battles = [];
-      safariEncounters = genSafariEncounters();
       break;
   }
 
@@ -394,31 +375,6 @@ const nextPhase = () => {
   io.emit("game-update-state", game);
   game.newPhase = false;
   saveGame();
-  if (game.turn == game.semiTurn && game.phase == "action")
-    startSemiTournament();
-};
-
-//sees if a player is on a tile with another player
-const checkForPvP = (i) => {
-  let location = players[i].location;
-  players.forEach((player, index) => {
-    if (
-      JSON.stringify(location) == JSON.stringify(player.location) &&
-      i != index &&
-      !inBattle.includes(index)
-    ) {
-      battles.push({
-        p1: i,
-        p2: index,
-        confirm: false,
-        p1Ready: false,
-        p2Ready: false,
-      });
-      inBattle.push(i);
-      inBattle.push(index);
-      io.to(players[i].name).emit("pvp-request", battles.length - 1);
-    }
-  });
 };
 
 //starts all queued battles

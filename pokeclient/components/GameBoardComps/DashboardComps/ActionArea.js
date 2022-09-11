@@ -12,6 +12,7 @@ const ActionArea = ({
   canUseShop,
   actionComplete,
   movement,
+  willPvpBattle,
   tileToShow,
   turnToMove,
   endTurn,
@@ -29,6 +30,7 @@ const ActionArea = ({
       <ActionButtons
         phase={phase}
         turnToMove={turnToMove}
+        willPvpBattle={willPvpBattle}
         movement={movement}
         tileToShow={tileToShow}
         isReady={isReady}

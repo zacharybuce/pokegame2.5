@@ -12,6 +12,7 @@ const ActionButtons = ({
   movement,
   turnToMove,
   moveToTile,
+  willPvpBattle,
   endTurn,
   isReady,
   tileToShow,
@@ -138,7 +139,7 @@ const ActionButtons = ({
           sx={{ width: "90%" }}
           onClick={() => actionButtonClick()}
         >
-          Take Action
+          {willPvpBattle ? "Enter Tournament" : "Take Action"}
         </Button>
       </Grid>
       <Grid item xs={5}>

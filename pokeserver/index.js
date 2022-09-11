@@ -5,6 +5,7 @@ import Poke from "pokemon-showdown";
 import pokemonData from "../data/pokemon.json" assert { type: "json" };
 import saveData from "../data/savedata.json" assert { type: "json" };
 import { writeFile } from "fs/promises";
+import genTeam from "./generateTeam.js";
 
 const Teams = Poke.Teams;
 const Dex = Poke.Dex;
@@ -32,7 +33,6 @@ var game = {
   moveOrder: [],
   moving: 0,
   newPhase: false,
-  semiTurn: 10,
 };
 var startTown = { pickOrder: [], townsChoosen: [] };
 var battles = [];
@@ -42,6 +42,15 @@ var sockets = [];
 var safariEncounters = [];
 var isContinue = false;
 var playerData = {};
+var tourneyNum = 1;
+var tourneyWinners = [];
+var tournamentData = {
+  rounds: [],
+  winners: [],
+  playerCount: 0,
+  currentRound: 0,
+  finished: false,
+};
 
 //--------------------------//
 io.on("connection", (socket) => {
@@ -294,12 +303,32 @@ io.on("connection", (socket) => {
     io.emit("game-update-players", players);
   });
 
+  //player uses candy
   socket.on("spend-candy", (amount) => {
     console.log(id + " spent " + amount);
     if (!playerData[id]) playerData[id] = { candiesSpent: 0 };
 
     if (playerData[id].candiesSpent) playerData[id].candiesSpent += amount;
     else playerData[id].candiesSpent = amount;
+  });
+
+  //player clicks action button when tournament is ready
+  socket.on("tournament-ready-up", () => {
+    playersReady++;
+    players[pIndex(id)].ready = true;
+    if (playersReady == players.length) {
+      startTournament();
+      resetPlayerReady();
+    }
+  });
+
+  socket.on("tournament-battle-ready", () => {
+    playersReady++;
+
+    if (playersReady == tournamentData.playerCount) {
+      startBattles();
+      resetPlayerReady();
+    }
   });
 });
 
@@ -314,6 +343,11 @@ const startGame = () => {
 
   io.emit("start-game");
   resetPlayerReady();
+
+  safariEncounters = genSafariEncounters();
+  setInterval(() => {
+    safariEncounters = genSafariEncounters();
+  }, 300000);
 };
 
 //randomly decide the order in which players pick a start town
@@ -375,17 +409,6 @@ const nextPhase = () => {
   io.emit("game-update-state", game);
   game.newPhase = false;
   saveGame();
-};
-
-//starts all queued battles
-const startPvPBattle = (battle, index) => {
-  if (battle.confirm) {
-    let player1 = players[battle.p1];
-    let player2 = players[battle.p2];
-    let socket1 = sockets[battle.p1];
-    let socket2 = sockets[battle.p2];
-    pvpBattle(player1, player2, socket1, socket2, index);
-  }
 };
 
 //sets order in which players will move.
@@ -482,7 +505,7 @@ const wildBattle = (socket, id, wildPokemon) => {
 };
 
 //logic for gymBattle
-const gymBattle = (socket, id, gymTeam) => {
+const gymBattle = (socket, id, gymTeam, battleIndex, isTourney) => {
   let stream = new Sim.BattleStream();
   let aiState = [];
   let aiAliveMon = { 1: true, 2: true, 3: true };
@@ -504,7 +527,7 @@ const gymBattle = (socket, id, gymTeam) => {
   };
   const p2spec = {
     //gym leader
-    name: "Gym Leader",
+    name: isTourney ? "Rival" : "Gym Leader",
     team: Teams.pack(oppTeam),
   };
 
@@ -525,7 +548,7 @@ const gymBattle = (socket, id, gymTeam) => {
         let rand;
         do {
           rand = getRand(1, 3);
-        } while (rand == aiMonCurrent);
+        } while (rand == aiMonCurrent || !aiAliveMon[rand]);
         aiMonCurrent = rand;
         setTimeout(() => stream.write(`>p2 switch ${aiMonCurrent}`), delay);
       } else {
@@ -542,7 +565,7 @@ const gymBattle = (socket, id, gymTeam) => {
       stream.write(`>p1 switch ${message}`);
       console.log("wrote to sream p1");
 
-      if (!JSON.parse(aiState).wait)
+      if (!JSON.parse(aiState).wait && !JSON.parse(aiState).forceSwitch)
         stream.write(
           `>p2 move ${aiChoice(playerTeam, aiState, oppTeam, "gymchallenge")}`
         );
@@ -577,11 +600,37 @@ const gymBattle = (socket, id, gymTeam) => {
 
       if (!output.includes("|win") && output.includes("|faint|p2a:")) {
         aiAliveMon[aiMonCurrent] = false;
-        aiMonCurrent++;
+        let rand;
+        do {
+          rand = getRand(1, 3);
+        } while (rand == aiMonCurrent || !aiAliveMon[rand]);
+        aiMonCurrent = rand;
         setTimeout(() => stream.write(`>p2 switch ${aiMonCurrent}`), delay);
       }
 
       if (tokens.includes("win")) {
+        if (!isTourney) battles[battleIndex] = undefined;
+        else {
+          tourneyWinners[battleIndex] = tokens[tokens.length - 1];
+          if (tournamentData.winners[0])
+            tournamentData.winners[0].push(tokens[tokens.length - 1]);
+          else tournamentData.winners[0] = [tokens[tokens.length - 1]];
+          if (tourneyWinners.length == battles.length * 2) {
+            tournamentData.currentRound + 1;
+            createBattles(tourneyWinners, tournamentData.currentRound);
+            tourneyWinners = [];
+          } else if (tourneyWinners.length == 1) {
+            tournamentData.finished = true;
+            io.emit("tournament-update", tournamentData);
+            tournamentData = {
+              rounds: [],
+              winners: [],
+              playerCount: 0,
+              currentRound: 0,
+              finished: false,
+            };
+          }
+        }
       }
     }
   })();
@@ -624,8 +673,8 @@ const championBattle = (socket, id, gymTeam) => {
       if (aiState.forceSwitch) {
         let rand;
         do {
-          rand = getRand(1, 3);
-        } while (rand == aiMonCurrent);
+          rand = getRand(1, 6);
+        } while (rand == aiMonCurrent || !aiAliveMon[rand]);
         aiMonCurrent = rand;
         setTimeout(() => stream.write(`>p2 switch ${aiMonCurrent}`), delay);
       } else {
@@ -642,7 +691,7 @@ const championBattle = (socket, id, gymTeam) => {
       stream.write(`>p1 switch ${message}`);
       console.log("wrote to sream p1");
 
-      if (!JSON.parse(aiState).wait)
+      if (!JSON.parse(aiState).wait && !JSON.parse(aiState).forceSwitch)
         stream.write(
           `>p2 move ${aiChoice(playerTeam, aiState, oppTeam, "gymchallenge")}`
         );
@@ -677,7 +726,11 @@ const championBattle = (socket, id, gymTeam) => {
 
       if (!output.includes("|win") && output.includes("|faint|p2a:")) {
         aiAliveMon[aiMonCurrent] = false;
-        aiMonCurrent++;
+        let rand;
+        do {
+          rand = getRand(1, 6);
+        } while (rand == aiMonCurrent || !aiAliveMon[rand]);
+        aiMonCurrent = rand;
         setTimeout(() => stream.write(`>p2 switch ${aiMonCurrent}`), delay);
       }
 
@@ -772,11 +825,18 @@ const trainerBattle = (socket, id, pokemon) => {
 };
 
 //logic for pvp battles
-const pvpBattle = (player1, player2, socket1, socket2, battleIndex) => {
+const pvpBattle = (
+  player1,
+  player2,
+  socket1,
+  socket2,
+  battleIndex,
+  isTourney
+) => {
   let stream = new Sim.BattleStream();
   socket1.join("battle" + battleIndex);
   socket2.join("battle" + battleIndex);
-  let partySize = game.turn > 20 ? 6 : 3;
+  let partySize = tourneyNum == 2 ? 6 : 3;
 
   //use the first 3 non fainted pokemon for player 1
   let monToUse = [];
@@ -868,7 +928,29 @@ const pvpBattle = (player1, player2, socket1, socket2, battleIndex) => {
         stream = undefined;
         socket1.leave("battle" + battleIndex);
         socket2.leave("battle" + battleIndex);
-        battles[battleIndex] = undefined;
+        if (!isTourney) battles[battleIndex] = undefined;
+        else {
+          tourneyWinners[battleIndex] = tokens[tokens.length - 1];
+          if (tournamentData.winners[0])
+            tournamentData.winners[0].push(tokens[tokens.length - 1]);
+          else tournamentData.winners[0] = [tokens[tokens.length - 1]];
+          if (tourneyWinners.length == battles.length * 2) {
+            tournamentData.currentRound + 1;
+            createBattles(tourneyWinners, tournamentData.currentRound);
+            tourneyWinners = [];
+          } else if (tourneyWinners.length == 1) {
+            tournamentData.finished = true;
+            tourneyNum++;
+            io.emit("tournament-update", tournamentData);
+            tournamentData = {
+              rounds: [],
+              winners: [],
+              playerCount: 0,
+              currentRound: 0,
+              finished: false,
+            };
+          }
+        }
       }
     }
   })();
@@ -1191,7 +1273,20 @@ const saveGame = () => {
   writeFile("../data/savedata.json", JSON.stringify(saveData), "utf8");
 };
 
-const startSemiTournament = () => {
+const startTournament = () => {
+  const seededPlayers = seedPlayers();
+  if (seededPlayers.length % 2 != 0) seededPlayers.push({ name: "Rival" });
+
+  for (let i = 0; i < seededPlayers.length / 2; i++) {
+    tournamentData.rounds[i] = [];
+  }
+
+  tournamentData.playerCount = players.length;
+  createBattles(seededPlayers, 0);
+};
+
+//seeds players based on total candy spent
+const seedPlayers = () => {
   let seededPlayers = players.slice();
 
   seededPlayers.sort((a, b) => {
@@ -1202,34 +1297,101 @@ const startSemiTournament = () => {
     return 0;
   });
 
+  return seededPlayers;
+};
+
+const createBattles = (participants, round) => {
   let battleIndex = 0;
-  for (let i = seededPlayers.length - 1; i > 0; i = i - 2) {
-    if (i - 1 >= 0)
-      battles.push({
-        p1: pIndex(seededPlayers[i].name),
-        p2: pIndex(seededPlayers[i - 1].name),
-        confirm: true,
-        p1Ready: false,
-        p2Ready: false,
-      });
-    inBattle.push(pIndex(seededPlayers[i].name));
-    inBattle.push(pIndex(seededPlayers[i - 1].name));
-    // io.to(seededPlayers[i].name).emit("pvp-request", battles.length - 1);
-    io.to(seededPlayers[i].name).emit(
-      "pvpbattle-confirmed",
-      battleIndex,
-      battles[battleIndex].p1,
-      battles[battleIndex].p2,
-      players
-    );
-    io.to(seededPlayers[i - 1].name).emit(
-      "pvpbattle-confirmed",
-      battleIndex,
-      battles[battleIndex].p1,
-      battles[battleIndex].p2,
-      players
-    );
+  for (let i = 0; i < participants.length; i += 2) {
+    battles[battleIndex] = {
+      p1: pIndex(participants[i].name),
+      p2: pIndex(participants[i + 1].name),
+      p1Name: participants[i].name,
+      p2Name: participants[i + 1].name,
+      p1Ready: false,
+      p2Ready: false,
+    };
     battleIndex++;
+  }
+
+  tournamentData.rounds[round] = battles;
+  io.emit("tournament-update", tournamentData);
+};
+
+const startBattles = () => {
+  for (let i = 0; i < battles.length; i++) {
+    let player1 =
+      battles[i].p1Name != "Rival"
+        ? players[pIndex(battles[i].p1Name)]
+        : genRival(players[pIndex(battles[i].p2Name)].team);
+    let player2 =
+      battles[i].p2Name != "Rival"
+        ? players[pIndex(battles[i].p2Name)]
+        : genRival(players[pIndex(battles[i].p1Name)].team);
+    let socket1 =
+      battles[i].p1Name != "Rival"
+        ? sockets[pIndex(battles[i].p1Name)]
+        : undefined;
+    let socket2 =
+      battles[i].p2Name != "Rival"
+        ? sockets[pIndex(battles[i].p2Name)]
+        : undefined;
+
+    if (socket1 && socket2) {
+      io.to(player1.name).emit("start-tournament-battle", {
+        name: player2.name,
+        sprite: player2.sprite,
+      });
+      io.to(player2.name).emit("start-tournament-battle", {
+        name: player1.name,
+        sprite: player1.sprite,
+      });
+
+      setTimeout(
+        () => pvpBattle(player1, player2, socket1, socket2, i, true),
+        3000
+      );
+    } else if (socket1) {
+      io.to(player1.name).emit("start-tournament-battle", {
+        name: "Rival",
+        sprite: "Brendan",
+      });
+      gymBattle(socket1, player1.name, player2.team, i, true);
+    } else {
+      io.to(player2.name).emit("start-tournament-battle", {
+        name: "Rival",
+        sprite: "Brendan",
+      });
+      gymBattle(socket2, player2.name, player1.team, i, true);
+    }
+  }
+};
+
+const genRival = (oppTeam) => {
+  let data = {};
+  let highestLvl = 20;
+
+  oppTeam.forEach((pokemon) => {
+    if (highestLvl < pokemon.level) highestLvl = pokemon.level;
+  });
+
+  let candiesSpent = Math.floor((highestLvl - 20) / 5);
+
+  data.level = highestLvl;
+  data.candiesSpent = candiesSpent;
+  data.team = genRivalTeam();
+  let rivalData = {
+    name: "Rival",
+    team: genTeam(data),
+  };
+
+  return rivalData;
+};
+
+const genRivalTeam = () => {
+  switch (tourneyNum) {
+    case 1:
+      return ["Growlithe", "Weavile", "Espeon"];
   }
 };
 

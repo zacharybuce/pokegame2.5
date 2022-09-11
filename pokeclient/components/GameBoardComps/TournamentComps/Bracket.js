@@ -1,0 +1,28 @@
+import { Grid, Typography } from "@mui/material";
+import React from "react";
+import TournamentBattle from "./TournamentBattle";
+
+const Bracket = ({ tournamentData }) => {
+  console.log(tournamentData);
+  return (
+    <Grid container sx={{ mt: "10px" }}>
+      {tournamentData?.rounds.map((round, index) => (
+        <Grid item xs={12 / tournamentData?.rounds.length}>
+          <Typography variant="h5">Round {index + 1}</Typography>
+          {round.map((battle) => (
+            <TournamentBattle
+              battle={battle}
+              winner={
+                tournamentData.winners[tournamentData.currentRound]
+                  ? tournamentData.winners[tournamentData.currentRound][index]
+                  : ""
+              }
+            />
+          ))}
+        </Grid>
+      ))}
+    </Grid>
+  );
+};
+
+export default Bracket;

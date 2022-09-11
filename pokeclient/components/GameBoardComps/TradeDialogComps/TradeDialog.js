@@ -154,7 +154,7 @@ const TradeDialog = ({
     socket.emit("end-trade");
     setTradeOffer(undefined);
     setTradeDialog(false);
-    tradeStart(false);
+    setTradeStart(false);
   };
 
   const successfulTrade = (playerOffer, oppPlayerOffer) => {

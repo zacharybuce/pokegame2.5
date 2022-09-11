@@ -3,7 +3,16 @@ import React from "react";
 import Clock from "./Clock";
 import Resources from "./Resources";
 
-const ResourceBar = ({ turn, money, candies, bag, badges }) => {
+const ResourceBar = ({
+  turn,
+  money,
+  candies,
+  startTimer,
+  bag,
+  badges,
+  setWillPvpBattle,
+  setStartTimer,
+}) => {
   return (
     <AppBar position="fixed" className="resourcebar">
       <Toolbar>
@@ -18,7 +27,11 @@ const ResourceBar = ({ turn, money, candies, bag, badges }) => {
             alignItems="center"
             xs={2}
           >
-            <Clock startTimer={true} />
+            <Clock
+              startTimer={startTimer}
+              setWillPvpBattle={setWillPvpBattle}
+              setStartTimer={setStartTimer}
+            />
           </Grid>
           <Resources
             money={money}

@@ -14,6 +14,7 @@ import IndicatorDialog from "./IndicatiorDialogComps/IndicatorDialog";
 import PvpDialog from "./PvpDialog";
 import TradeDialog from "./TradeDialogComps/TradeDialog";
 import SettingsButton from "./SettingsButton";
+import TournamentDialog from "./TournamentComps/TournamentDialog";
 
 const testMon = {
   species: "Pikachu",
@@ -611,6 +612,218 @@ const testMon5 = {
   dragId: "1661856266351",
 };
 
+const testMon6 = {
+  species: "Absol",
+  num: "359",
+  learnset: [
+    {
+      move: "leer",
+      level: "1",
+    },
+    {
+      move: "quickattack",
+      level: "1",
+    },
+    {
+      move: "doubleteam",
+      level: "5",
+    },
+    {
+      move: "knockoff",
+      level: "10",
+    },
+    {
+      move: "detect",
+      level: "15",
+    },
+    {
+      move: "taunt",
+      level: "20",
+    },
+    {
+      move: "slash",
+      level: "25",
+    },
+    {
+      move: "nightslash",
+      level: "30",
+    },
+    {
+      move: "focusenergy",
+      level: "35",
+    },
+    {
+      move: "suckerpunch",
+      level: "40",
+    },
+    {
+      move: "swordsdance",
+      level: "45",
+    },
+    {
+      move: "futuresight",
+      level: "50",
+    },
+    {
+      move: "perishsong",
+      level: "55",
+    },
+  ],
+  evolveCandies: "MAX",
+  levelUpCandies: 4,
+  levelUpIncrease: 3,
+  level: 20,
+  ability: "Pressure",
+  nature: "Naughty",
+  gender: "M",
+  types: ["Dark"],
+  item: {
+    name: "Absolite",
+    id: "absolite",
+    type: "mega-stone",
+    desc: "If held by an Absol, this item allows it to Mega Evolve in battle.",
+    cost: 5000,
+  },
+  moves: ["perishsong", "quickattack", "destinybond", "knockoff"],
+  evs: {
+    hp: 0,
+    atk: 0,
+    def: 0,
+    spa: 0,
+    spd: 0,
+    spe: 0,
+  },
+  ivs: {
+    hp: 13,
+    atk: 24,
+    def: 12,
+    spa: 2,
+    spd: 25,
+    spe: 30,
+  },
+  baseStats: {
+    hp: 65,
+    atk: 130,
+    def: 60,
+    spa: 75,
+    spd: 60,
+    spe: 75,
+  },
+  isShiny: false,
+  candiesSpent: 0,
+  exhaustion: 0,
+  fainted: false,
+  id: "absol",
+  dragId: "1662730610604",
+};
+
+const testMon7 = {
+  species: "Ho-Oh",
+  num: "250",
+  learnset: [
+    {
+      move: "ancientpower",
+      level: "1",
+    },
+    {
+      move: "gust",
+      level: "1",
+    },
+    {
+      move: "weatherball",
+      level: "1",
+    },
+    {
+      move: "whirlwind",
+      level: "1",
+    },
+    {
+      move: "lifedew",
+      level: "9",
+    },
+    {
+      move: "safeguard",
+      level: "18",
+    },
+    {
+      move: "calmmind",
+      level: "27",
+    },
+    {
+      move: "extrasensory",
+      level: "36",
+    },
+    {
+      move: "recover",
+      level: "45",
+    },
+    {
+      move: "sacredfire",
+      level: "54",
+    },
+    {
+      move: "sunnyday",
+      level: "63",
+    },
+    {
+      move: "fireblast",
+      level: "72",
+    },
+    {
+      move: "futuresight",
+      level: "81",
+    },
+    {
+      move: "skyattack",
+      level: "90",
+    },
+    {
+      move: "burnup",
+      level: "99",
+    },
+  ],
+  evolveCandies: "MAX",
+  levelUpCandies: 6,
+  levelUpIncrease: 2,
+  level: 20,
+  ability: "Regenerator",
+  nature: "Careful",
+  gender: "F",
+  types: ["Fire", "Flying"],
+  item: "",
+  moves: ["ancientpower", "gust", "sacredfire", "whirlwind"],
+  evs: {
+    hp: 0,
+    atk: 252,
+    def: 0,
+    spa: 0,
+    spd: 0,
+    spe: 252,
+  },
+  ivs: {
+    hp: 31,
+    atk: 31,
+    def: 31,
+    spa: 31,
+    spd: 31,
+    spe: 31,
+  },
+  baseStats: {
+    hp: 106,
+    atk: 130,
+    def: 90,
+    spa: 110,
+    spd: 154,
+    spe: 90,
+  },
+  isShiny: false,
+  candiesSpent: 0,
+  exhaustion: 0,
+  fainted: false,
+  id: "ho-oh",
+  dragId: "1662733634335",
+};
+
 const GameBoard = ({
   id,
   isContinue,
@@ -671,6 +884,7 @@ const GameBoard = ({
   const [actionDialog, setActionDialog] = useState(false);
   const [indicatorDialog, setIndicatorDialog] = useState(false);
   const [pvpDialog, setPvpDialog] = useState(false);
+  const [tournamentDialog, setTournamentDialog] = useState(false);
   const [tradeDialog, setTradeDialog] = useState(false);
 
   //---Use Effects----------------------------------------------------
@@ -704,6 +918,7 @@ const GameBoard = ({
         setAction("none");
         saveData();
         setPhase("movement");
+        setStartTimer(true);
       }
     });
     return () => socket.off("game-update-state");
@@ -732,15 +947,18 @@ const GameBoard = ({
     return () => socket.off("pvp-request");
   }, [socket, battleId]);
 
-  //checks for a pvp confirm
+  //checks for a pvp battle
   useEffect(() => {
     if (socket === undefined) return;
-    socket.on("pvpbattle-confirmed", (battleId, p1, p2, players) => {
-      genPvpBattle(battleId, p1, p2, players);
+    socket.on("start-tournament-battle", (event) => {
+      setEvent(event);
+      setAction("pvpbattle");
+
+      setActionDialog(true);
     });
 
-    return () => socket.off("pvpbattle-confirmed");
-  }, [socket, willPvpBattle]);
+    return () => socket.off("start-tournament-battle");
+  }, [socket]);
 
   //checks for trade offers
   useEffect(() => {
@@ -892,7 +1110,6 @@ const GameBoard = ({
   //end turn for movement and action
   const endTurn = () => {
     if (phase == "movement") {
-      setStartTimer(false);
       setIsReady(true);
       setMovement(maxMovement);
 
@@ -989,7 +1206,8 @@ const GameBoard = ({
 
     switch (phase) {
       case "movement":
-        tileName = tileToShow.tile;
+        if (tileToShow) tileName = tileToShow.tile;
+        else tileName = playerLocation.tile;
       case "action":
         tileName = playerLocation.tile;
     }
@@ -1042,9 +1260,8 @@ const GameBoard = ({
           break;
       }
     } else {
-      setWillPvpBattle(true);
-      setAction("pvpbattle");
-      setActionDialog(true);
+      setTournamentDialog(true);
+      socket.emit("tournament-ready-up");
     }
   };
 
@@ -1087,16 +1304,6 @@ const GameBoard = ({
     });
   };
 
-  //sets up the pvp battle
-  const genPvpBattle = (battleId, p1, p2, players) => {
-    console.log("gen pvp battle");
-    setBattleId(battleId);
-    if (players[p1].name == id)
-      setEvent({ sprite: players[p2].sprite, name: players[p2].name });
-    else setEvent({ sprite: players[p1].sprite, name: players[p1].name });
-    setWillPvpBattle(true);
-  };
-
   const initiateTrade = (player) => {
     socket.emit("trade-initiate", player);
     setTradeOffer({
@@ -1129,6 +1336,9 @@ const GameBoard = ({
         candies={candies}
         bag={bag}
         badges={badges.length}
+        startTimer={startTimer}
+        setWillPvpBattle={setWillPvpBattle}
+        setStartTimer={setStartTimer}
       />
       <SettingsButton setSettingsDialogOpen={setSettingsDialogOpen} />
       <TestBoardComp
@@ -1162,9 +1372,9 @@ const GameBoard = ({
           movement={movement}
           tileToShow={tileToShow}
           actionComplete={actionComplete}
+          willPvpBattle={willPvpBattle}
           moveToTile={moveToTile}
           endTurn={endTurn}
-          startTimer={startTimer}
           isReady={isReady}
           candies={candies}
           playerLocation={playerLocation}
@@ -1244,6 +1454,13 @@ const GameBoard = ({
       ) : (
         ""
       )}
+
+      <TournamentDialog
+        tournamentDialog={tournamentDialog}
+        setTournamentDialog={setTournamentDialog}
+        setWillPvpBattle={setWillPvpBattle}
+        setStartTimer={setStartTimer}
+      />
     </Box>
   );
 };

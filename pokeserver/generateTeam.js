@@ -1,5 +1,7 @@
-const { Dex } = require("pokemon-showdown");
-const pokemonData = require("../../../../data/pokemon.json");
+import Poke from "pokemon-showdown";
+import pokemonData from "../data/pokemon.json" assert { type: "json" };
+
+const Dex = Poke.Dex;
 
 //better than math rand
 function genRand(min, max) {
@@ -160,22 +162,16 @@ const getBestMoves = (moves, maxMoves) => {
   return moves.slice(0, maxMoves);
 };
 
-export default function handler(req, res) {
-  const { method } = req;
-
-  switch (method) {
-    case "POST":
-      let sentTeam = [];
-      console.log(req.body);
-      for (let i = 0; i < req.body.team.length; i++) {
-        let data = {
-          name: req.body.team[i],
-          level: req.body.level,
-          candiesSpent: req.body.candiesSpent,
-        };
-        sentTeam.push(generatePokemon(data));
-      }
-      res.status(200).json({ data: sentTeam });
-      break;
+export default function genTeam(req) {
+  let sentTeam = [];
+  for (let i = 0; i < req.team.length; i++) {
+    let data = {
+      name: req.team[i],
+      level: req.level,
+      candiesSpent: req.candiesSpent,
+    };
+    sentTeam.push(generatePokemon(data));
   }
+
+  return sentTeam;
 }

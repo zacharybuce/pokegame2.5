@@ -13,7 +13,7 @@ const PokeTradeIcon = ({ pokemon, offerTrade }) => {
         <b>{pokemon.level}</b>
       </Typography>
       <Typography>
-        <b>Item:</b> {pokemon.item}
+        <b>Item:</b> {pokemon.item.name}
       </Typography>
       <Typography>
         <b>Ability:</b> {pokemon.ability}

@@ -1,7 +1,7 @@
 import { Box, Typography } from "@mui/material";
 import React, { useState, useEffect, useRef } from "react";
 
-const Clock = ({ startTimer }) => {
+const Clock = ({ startTimer, setWillPvpBattle, setStartTimer }) => {
   const [time, setTime] = useState(0);
   const timerRef = useRef(time);
   timerRef.current = time;
@@ -9,7 +9,18 @@ const Clock = ({ startTimer }) => {
   useEffect(() => {
     if (startTimer) {
       let myInterval = setInterval(() => {
-        setTime((prev) => prev + 1);
+        if (startTimer) {
+          setTime((prev) => {
+            if (prev == 10 || prev == 30) {
+              console.log("trigger tournament");
+              setStartTimer(false);
+              setWillPvpBattle(true);
+            }
+            return prev + 1;
+          });
+        } else {
+          clearInterval(myInterval);
+        }
       }, 1000);
       return () => {
         clearInterval(myInterval);

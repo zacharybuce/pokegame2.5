@@ -76,7 +76,7 @@ const ActionDialog = ({
   const endBattle = (win, team, caught, ranFromBattle) => {
     setMusicEvent("action");
     socket.emit("end-battle");
-    applyExhaustion(team, win, ranFromBattle);
+    if (action != "pvpbattle") applyExhaustion(team, win, ranFromBattle);
     generateRewards(win, caught);
     if (caught) catchPokemon();
     setBattleEnd(true);
@@ -158,7 +158,7 @@ const ActionDialog = ({
         break;
       case "pvpbattle":
         if (win) {
-          setRewards({ win: win, candies: 15, money: 1000 });
+          setRewards({ win: win, candies: 5, money: 1000 });
           setCandies((prev) => prev + 5);
           setMoney((prev) => prev + 1000);
         } else {
@@ -489,7 +489,6 @@ const ActionDialog = ({
 
   const pvpBattle = () => {
     setMusicEvent("elite-battle");
-    socket.emit("pvpbattle-ready", battleId);
   };
 
   //sets candiesspent and level of mon based on badges

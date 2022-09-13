@@ -778,7 +778,7 @@
   "skypillar": {
     "name": "Sky Pillar",
     "desc": "This tower was created for the veneration of a Legendary Pokémon that lives far above in the heavens.",
-    "encounters": ["Sableye", "Mawile", "Deino", "Swablu", "Rayquaza"],
+    "encounters": ["Sableye", "Mawile", "Swablu", "Deino", "Rayquaza"],
     "encounterRates": [34, 28, 27, 10, 1],
     "trainers": ["Psychic", "RuinManiac", "BirdKeeper"],
     "img": "SkyPillar",

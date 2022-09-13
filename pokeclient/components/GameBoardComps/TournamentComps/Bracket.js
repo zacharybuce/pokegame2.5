@@ -9,12 +9,12 @@ const Bracket = ({ tournamentData }) => {
       {tournamentData?.rounds.map((round, index) => (
         <Grid item xs={12 / tournamentData?.rounds.length}>
           <Typography variant="h5">Round {index + 1}</Typography>
-          {round.map((battle) => (
+          {round.map((battle, i) => (
             <TournamentBattle
               battle={battle}
               winner={
-                tournamentData.winners[tournamentData.currentRound]
-                  ? tournamentData.winners[tournamentData.currentRound][index]
+                tournamentData.winners[index]
+                  ? tournamentData.winners[index][i]
                   : ""
               }
             />

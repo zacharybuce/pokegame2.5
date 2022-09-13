@@ -317,7 +317,11 @@ const ActionDialog = ({
             />
           );
         default:
-          return <div></div>;
+          return (
+            <div>
+              <h1>none</h1>
+            </div>
+          );
       }
     }
   };

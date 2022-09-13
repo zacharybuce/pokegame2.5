@@ -36,19 +36,19 @@ const StartTownCarousel = ({
         ref={(Carousel) => setCarousel(Carousel)}
       >
         {Object.keys(startingTowns).map((town) => {
-          if (!townsChoosen.includes(town))
-            return (
-              <TownCard
-                location={startingTowns[town].location}
-                townId={town}
-                name={startingTowns[town].name}
-                mapId={mapId}
-                color={startingTowns[town].color}
-                img={startingTowns[town].img}
-                starters={startingTowns[town].starters}
-                selectTown={selectTown}
-              />
-            );
+          return (
+            <TownCard
+              location={startingTowns[town].location}
+              townId={town}
+              name={startingTowns[town].name}
+              mapId={mapId}
+              color={startingTowns[town].color}
+              img={startingTowns[town].img}
+              starters={startingTowns[town].starters}
+              selectTown={selectTown}
+              disabled={townsChoosen.includes(town)}
+            />
+          );
         })}
       </ReactCardCarousel>
       <Button

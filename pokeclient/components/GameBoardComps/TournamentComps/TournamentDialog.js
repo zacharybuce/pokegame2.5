@@ -5,12 +5,15 @@ import { useSocket } from "../../../contexts/SocketProvider";
 
 const TournamentDialog = ({
   tournamentDialog,
+  id,
   setTournamentDialog,
   setWillPvpBattle,
   setStartTimer,
+  setActionComplete,
 }) => {
   const socket = useSocket();
   const [tourneyData, setTourneyData] = useState();
+  const [canParticipate, setCanParticipate] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [finished, setFinished] = useState(false);
 
@@ -20,6 +23,9 @@ const TournamentDialog = ({
     socket.on("tournament-update", (tournamentData) => {
       setTourneyData(tournamentData);
       setIsReady(false);
+      if (tournamentData.participants.includes(id)) {
+        setCanParticipate(true);
+      } else setCanParticipate(false);
       if (tournamentData.finished) {
         setFinished(true);
         setStartTimer(true);
@@ -35,10 +41,11 @@ const TournamentDialog = ({
         <Typography variant="h4">Tournament Bracket</Typography>
         <Divider sx={{ backgroundColor: "#ededed" }} />
         <Bracket tournamentData={tourneyData} />
-        {!isReady && tourneyData && !finished ? (
+        {!isReady && tourneyData && !finished && canParticipate ? (
           <Button
             variant="contained"
             onClick={() => {
+              setActionComplete(false);
               socket.emit("tournament-battle-ready");
               setIsReady(true);
             }}
@@ -46,6 +53,12 @@ const TournamentDialog = ({
           >
             Ready
           </Button>
+        ) : (
+          ""
+        )}
+
+        {(isReady && !finished) || !canParticipate ? (
+          <Alert severity="info">Wainting for other players</Alert>
         ) : (
           ""
         )}

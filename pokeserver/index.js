@@ -50,6 +50,7 @@ var tournamentData = {
   playerCount: 0,
   currentRound: 0,
   finished: false,
+  participants: [],
 };
 
 //--------------------------//
@@ -317,15 +318,15 @@ io.on("connection", (socket) => {
     playersReady++;
     players[pIndex(id)].ready = true;
     if (playersReady == players.length) {
-      startTournament();
       resetPlayerReady();
+      startTournament();
     }
   });
 
   socket.on("tournament-battle-ready", () => {
     playersReady++;
 
-    if (playersReady == tournamentData.playerCount) {
+    if (playersReady == tournamentData.participants.length) {
       startBattles();
       resetPlayerReady();
     }
@@ -609,26 +610,19 @@ const gymBattle = (socket, id, gymTeam, battleIndex, isTourney) => {
       }
 
       if (tokens.includes("win")) {
-        if (!isTourney) battles[battleIndex] = undefined;
-        else {
-          tourneyWinners[battleIndex] = tokens[tokens.length - 1];
-          if (tournamentData.winners[0])
-            tournamentData.winners[0].push(tokens[tokens.length - 1]);
-          else tournamentData.winners[0] = [tokens[tokens.length - 1]];
-          if (tourneyWinners.length == battles.length * 2) {
-            tournamentData.currentRound + 1;
-            createBattles(tourneyWinners, tournamentData.currentRound);
-            tourneyWinners = [];
-          } else if (tourneyWinners.length == 1) {
-            tournamentData.finished = true;
-            io.emit("tournament-update", tournamentData);
-            tournamentData = {
-              rounds: [],
-              winners: [],
-              playerCount: 0,
-              currentRound: 0,
-              finished: false,
-            };
+        if (isTourney) {
+          let winner;
+          if (tokens[tokens.length - 1] == "Rival") {
+            winner = { name: "Rival", team: gymTeam };
+          } else {
+            winner = players[pIndex(tokens[tokens.length - 1])];
+          }
+          tourneyWinners[battleIndex] = winner;
+          tournamentData.winners[tournamentData.currentRound][battleIndex] =
+            winner.name;
+
+          if (tourneyWinners.length == battles.length) {
+            nextTourneyRound();
           }
         }
       }
@@ -637,7 +631,7 @@ const gymBattle = (socket, id, gymTeam, battleIndex, isTourney) => {
 };
 
 //logic for championBattle
-const championBattle = (socket, id, gymTeam) => {
+const championBattle = (socket, id, gymTeam, battleIndex, isTourney) => {
   let stream = new Sim.BattleStream();
   let aiState = [];
   let aiAliveMon = { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true };
@@ -735,6 +729,21 @@ const championBattle = (socket, id, gymTeam) => {
       }
 
       if (tokens.includes("win")) {
+        if (isTourney) {
+          let winner;
+          if (tokens[tokens.length - 1] == "Rival") {
+            winner = { name: "Rival", team: gymTeam };
+          } else {
+            winner = players[pIndex(tokens[tokens.length - 1])];
+          }
+          tourneyWinners[battleIndex] = winner;
+          tournamentData.winners[tournamentData.currentRound][battleIndex] =
+            winner.name;
+
+          if (tourneyWinners.length == battles.length) {
+            nextTourneyRound();
+          }
+        }
       }
     }
   })();
@@ -836,7 +845,7 @@ const pvpBattle = (
   let stream = new Sim.BattleStream();
   socket1.join("battle" + battleIndex);
   socket2.join("battle" + battleIndex);
-  let partySize = tourneyNum == 2 ? 6 : 3;
+  let partySize = tourneyNum == 3 ? 6 : 3;
 
   //use the first 3 non fainted pokemon for player 1
   let monToUse = [];
@@ -930,25 +939,14 @@ const pvpBattle = (
         socket2.leave("battle" + battleIndex);
         if (!isTourney) battles[battleIndex] = undefined;
         else {
-          tourneyWinners[battleIndex] = tokens[tokens.length - 1];
-          if (tournamentData.winners[0])
-            tournamentData.winners[0].push(tokens[tokens.length - 1]);
-          else tournamentData.winners[0] = [tokens[tokens.length - 1]];
-          if (tourneyWinners.length == battles.length * 2) {
-            tournamentData.currentRound + 1;
-            createBattles(tourneyWinners, tournamentData.currentRound);
-            tourneyWinners = [];
-          } else if (tourneyWinners.length == 1) {
-            tournamentData.finished = true;
-            tourneyNum++;
-            io.emit("tournament-update", tournamentData);
-            tournamentData = {
-              rounds: [],
-              winners: [],
-              playerCount: 0,
-              currentRound: 0,
-              finished: false,
-            };
+          let winner = players[pIndex(tokens[tokens.length - 1])];
+
+          tourneyWinners[battleIndex] = winner;
+          tournamentData.winners[tournamentData.currentRound][battleIndex] =
+            winner.name;
+
+          if (tourneyWinners.length == battles.length) {
+            nextTourneyRound();
           }
         }
       }
@@ -1275,10 +1273,14 @@ const saveGame = () => {
 
 const startTournament = () => {
   const seededPlayers = seedPlayers();
-  if (seededPlayers.length % 2 != 0) seededPlayers.push({ name: "Rival" });
-
+  if (seededPlayers.length % 2 != 0) {
+    seededPlayers.push({ name: "Rival" });
+    playersReady++;
+  }
+  //generate amount of rounds
   for (let i = 0; i < seededPlayers.length / 2; i++) {
     tournamentData.rounds[i] = [];
+    tournamentData.winners[i] = [];
   }
 
   tournamentData.playerCount = players.length;
@@ -1301,9 +1303,15 @@ const seedPlayers = () => {
 };
 
 const createBattles = (participants, round) => {
+  tournamentData.participants = Array.from(
+    participants,
+    (participant) => participant.name
+  );
   let battleIndex = 0;
+  let newBattles = [];
+
   for (let i = 0; i < participants.length; i += 2) {
-    battles[battleIndex] = {
+    newBattles[battleIndex] = {
       p1: pIndex(participants[i].name),
       p2: pIndex(participants[i + 1].name),
       p1Name: participants[i].name,
@@ -1314,7 +1322,8 @@ const createBattles = (participants, round) => {
     battleIndex++;
   }
 
-  tournamentData.rounds[round] = battles;
+  battles = newBattles;
+  tournamentData.rounds[round] = newBattles;
   io.emit("tournament-update", tournamentData);
 };
 
@@ -1356,13 +1365,17 @@ const startBattles = () => {
         name: "Rival",
         sprite: "Brendan",
       });
-      gymBattle(socket1, player1.name, player2.team, i, true);
+      if (tourneyNum != 3)
+        gymBattle(socket1, player1.name, player2.team, i, true);
+      else championBattle(socket1, player1.name, player2.team, i, true);
     } else {
       io.to(player2.name).emit("start-tournament-battle", {
         name: "Rival",
         sprite: "Brendan",
       });
-      gymBattle(socket2, player2.name, player1.team, i, true);
+      if (tourneyNum != 3)
+        gymBattle(socket2, player2.name, player1.team, i, true);
+      else championBattle(socket1, player1.name, player2.team, i, true);
     }
   }
 };
@@ -1391,7 +1404,46 @@ const genRival = (oppTeam) => {
 const genRivalTeam = () => {
   switch (tourneyNum) {
     case 1:
-      return ["Growlithe", "Weavile", "Espeon"];
+      return ["Growlithe", "Sneasel", "Espeon"];
+    case 2:
+      return ["Arcanine", "Swampert", "Ampharos"];
+    case 3:
+      return [
+        "Arcanine",
+        "Swampert",
+        "Ampharos",
+        "Weavile",
+        "Espeon",
+        "Breloom",
+      ];
+  }
+};
+
+const nextTourneyRound = () => {
+  if (tournamentData.currentRound == tournamentData.rounds.length - 1) {
+    tournamentData.finished = true;
+    tourneyNum++;
+    io.emit("tournament-update", tournamentData);
+    tournamentData = {
+      rounds: [],
+      winners: [],
+      playerCount: 0,
+      currentRound: 0,
+      finished: false,
+      participants: [],
+    };
+  } else {
+    let nextRound = tournamentData.currentRound + 1;
+    tournamentData.currentRound = nextRound;
+
+    tournamentData.participants = [];
+    battles = [];
+
+    if (Array.from(tourneyWinners, (winner) => winner.name).includes("Rival"))
+      playersReady++;
+
+    createBattles(tourneyWinners, nextRound);
+    tourneyWinners = [];
   }
 };
 

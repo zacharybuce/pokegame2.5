@@ -953,8 +953,11 @@ const GameBoard = ({
     socket.on("start-tournament-battle", (event) => {
       setEvent(event);
       setAction("pvpbattle");
-
       setActionDialog(true);
+
+      // console.log("event: " , event)
+      // console.log("action: " + action)
+      // console.log("action complete: "+actionComplete)
     });
 
     return () => socket.off("start-tournament-battle");
@@ -1284,6 +1287,7 @@ const GameBoard = ({
   //sets player location to startTown and notifies the server
   const sendPlayerHome = () => {
     setPlayerLocation(startTown);
+    setTileToShow("none");
     socket.emit("game-move", startTown, true);
     healTeam();
   };
@@ -1457,9 +1461,11 @@ const GameBoard = ({
 
       <TournamentDialog
         tournamentDialog={tournamentDialog}
+        id={id}
         setTournamentDialog={setTournamentDialog}
         setWillPvpBattle={setWillPvpBattle}
         setStartTimer={setStartTimer}
+        setActionComplete={setActionComplete}
       />
     </Box>
   );

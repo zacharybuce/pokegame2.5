@@ -11877,6 +11877,7 @@
     "species": "Weavile",
     "num": "461",
     "learnset": [
+      { "move": "icepunch", "level": "1" },
       { "move": "agility", "level": "1" },
       { "move": "assurance", "level": "1" },
       { "move": "beatup", "level": "1" },

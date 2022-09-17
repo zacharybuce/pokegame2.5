@@ -10,8 +10,9 @@ import ContinueLobby from "../components/LobbyComps/ContinueLobby";
 import Music from "../components/SoundComps/Music";
 
 export default function Index() {
-  const [id, setId] = useLocalStorage("id");
-  const [sprite, setSprite] = useLocalStorage("sprite");
+  const [id, setId] = useLocalStorage("id", null);
+  const [serverIp, setServerIp] = useState();
+  const [sprite, setSprite] = useLocalStorage("sprite", null);
   const [screen, setScreen] = useState("Home");
   const [trainerDialogOpen, setTrainerDialogOpen] = useState(false);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
@@ -29,6 +30,8 @@ export default function Index() {
             setScreen={setScreen}
             setSettingsDialogOpen={setSettingsDialogOpen}
             sprite={sprite}
+            serverIp={serverIp}
+            setServerIp={setServerIp}
             setMusicEvent={setMusicEvent}
           />
         );
@@ -55,7 +58,7 @@ export default function Index() {
   };
 
   return (
-    <SocketProvider id={id}>
+    <SocketProvider id={id} ip={serverIp}>
       {screenDisplay(screen)}
       <TrainerDialog
         trainerDialogOpen={trainerDialogOpen}

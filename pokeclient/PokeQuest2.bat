@@ -1,0 +1,6 @@
+@ECHO OFF
+ECHO Checking for node modules...
+if not exist .\node_modules\nul npm install --f
+ECHO Make sure to configure the env file!
+ECHO Starting local client...
+npm run dev

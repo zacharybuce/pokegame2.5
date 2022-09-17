@@ -34,9 +34,10 @@ const ActionDialog = ({
   const socket = useSocket();
   const [wildMon, setWildMon] = useState();
   const [battleEnd, setBattleEnd] = useState(false);
-  const [rewards, setRewards] = useState([]);
+  const [rewards, setRewards] = useState();
   const [oppTeam, setOppTeam] = useState();
   const [releaseDialog, setReleaseDialog] = useState();
+  const pickupChance = 40;
 
   useEffect(() => {
     if ((action != "starter") & (action != "none")) socket.emit("in-action");
@@ -77,20 +78,19 @@ const ActionDialog = ({
     setMusicEvent("action");
     socket.emit("end-battle");
     if (action != "pvpbattle") applyExhaustion(team, win, ranFromBattle);
-    generateRewards(win, caught);
+    generateRewards(win, caught, team);
     if (caught) catchPokemon();
-    setBattleEnd(true);
     if (!win && action == "pvpbattle") pvpBattleLost();
+    setBattleEnd(true);
   };
 
   //decide rewards based on battle type and badges
-  const generateRewards = (win, caught) => {
+  const generateRewards = async (win, caught) => {
     switch (action) {
       case "safarizone":
       case "wildbattle":
         if (win && !caught) {
           let candies = 0;
-          //console.log(oppTeam);
           let bst = 0;
           for (const stat in wildMon.baseStats) {
             if (Object.hasOwnProperty.call(wildMon.baseStats, stat)) {
@@ -99,7 +99,25 @@ const ActionDialog = ({
           }
           candies += Math.round(bst / 150);
 
-          setRewards({ win: win, candies: candies });
+          let pickupItems = [];
+
+          for (const mon of team) {
+            if (mon.ability == "Pickup") {
+              let rand = Math.floor(Math.random() * 100);
+              console.log(rand);
+              if (rand <= pickupChance) {
+                let item = await genPickup();
+                pickupItems.push(item);
+              }
+            }
+          }
+
+          if (pickupItems.length > 0) {
+            setRewards({ win: win, candies: candies, items: pickupItems });
+          } else {
+            setRewards({ win: win, candies: candies });
+          }
+
           setCandies((prev) => prev + candies);
         } else if (win && caught) {
           setRewards({ win: win, candies: 1 });
@@ -149,7 +167,31 @@ const ActionDialog = ({
             candies += Math.round(bst / 150);
           });
           let money = 500 + badges.length * 500;
-          setRewards({ win: win, candies: candies, money: money });
+
+          let pickupItems = [];
+
+          for (const mon of team) {
+            if (mon.ability == "Pickup") {
+              let rand = Math.floor(Math.random() * 100);
+              console.log(rand);
+              if (rand <= pickupChance) {
+                let item = await genPickup();
+                pickupItems.push(item);
+              }
+            }
+          }
+
+          if (pickupItems.length > 0) {
+            setRewards({
+              win: win,
+              money: money,
+              candies: candies,
+              items: pickupItems,
+            });
+          } else {
+            setRewards({ win: win, money: money, candies: candies });
+          }
+
           setCandies((prev) => prev + candies);
           setMoney((prev) => prev + money);
         } else {
@@ -179,12 +221,11 @@ const ActionDialog = ({
 
             candies += Math.round(bst / 150);
           });
-
           setRewards({
             win: win,
             candies: candies,
             money: 0,
-            item: event.item,
+            items: [event.item],
           });
           setCandies((prev) => prev + candies);
           let newBag = bag;
@@ -696,9 +737,22 @@ const ActionDialog = ({
     setTeam([...filteredTeam]);
   };
 
+  const genPickup = async () => {
+    let res = await fetch(
+      process.env.NEXT_PUBLIC_ROOT_URL + "/api/genRandItem"
+    );
+    let json = await res.json();
+
+    let newBag = bag;
+    newBag.heldItems.push(json.item);
+    setBag(newBag);
+
+    return new Promise((resolve) => resolve(json.item));
+  };
+
   return (
     <Dialog maxWidth={"lg"} fullWidth open={actionDialog}>
-      {battleEnd ? (
+      {battleEnd && rewards ? (
         <BattleEndScreen rewards={rewards} closeDialog={closeDialog} />
       ) : (
         display()

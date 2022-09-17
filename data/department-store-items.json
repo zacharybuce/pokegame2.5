@@ -32,7 +32,7 @@
       "Rocky Helmet",
       "Metronome"
     ],
-    "tms": ["Thunderbolt", "Flamethrower", "Ice Beam", "Surf"],
+    "tms": ["Thunderbolt", "Flamethrower", "Ice Beam", "Surf", "Giga Drain"],
     "heldItemsCost": 1800,
     "tmsCost": 3500
   },

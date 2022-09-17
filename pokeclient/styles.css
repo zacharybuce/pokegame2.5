@@ -211,3 +211,74 @@
     background-position: 0% 82%;
   }
 }
+
+.oneshake {
+  animation: oneshakes 1s;
+}
+
+.twoshake {
+  animation: twoshakes 2s;
+}
+
+.threeshake {
+  animation: threeshakes 3s;
+}
+
+.fourshake {
+  animation: twoshakes 2s;
+  animation-iteration-count: 2;
+}
+
+@keyframes oneshakes {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(45deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes twoshakes {
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(45deg);
+  }
+  50% {
+    transform: rotate(0deg);
+  }
+  75% {
+    transform: rotate(-45deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes threeshakes {
+  0% {
+    transform: rotate(0deg);
+  }
+  16% {
+    transform: rotate(45deg);
+  }
+  32% {
+    transform: rotate(0deg);
+  }
+  48% {
+    transform: rotate(-45deg);
+  }
+  64% {
+    transform: rotate(0deg);
+  }
+  80% {
+    transform: rotate(45deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}

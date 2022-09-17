@@ -612,10 +612,26 @@ const gymBattle = (socket, id, gymTeam, battleIndex, isTourney) => {
       if (tokens.includes("win")) {
         if (isTourney) {
           let winner;
-          if (tokens[tokens.length - 1] == "Rival") {
-            winner = { name: "Rival", team: gymTeam };
+          if (tokens[tokens.length - 1] != "upkeep") {
+            if (tokens[tokens.length - 1] == "Rival") {
+              winner = { name: "Rival", team: gymTeam };
+            } else {
+              winner = players[pIndex(tokens[tokens.length - 1])];
+            }
           } else {
-            winner = players[pIndex(tokens[tokens.length - 1])];
+            if (
+              tokens[tokens.length - 2].replace(/(?:\r\n|\r|\n)/g, "") ==
+              "Rival"
+            ) {
+              winner = { name: "Rival", team: gymTeam };
+            } else {
+              winner =
+                players[
+                  pIndex(
+                    tokens[tokens.length - 2].replace(/(?:\r\n|\r|\n)/g, "")
+                  )
+                ];
+            }
           }
           tourneyWinners[battleIndex] = winner;
           tournamentData.winners[tournamentData.currentRound][battleIndex] =
@@ -647,7 +663,7 @@ const championBattle = (socket, id, gymTeam, battleIndex, isTourney) => {
   };
   const p2spec = {
     //gym leader
-    name: "Champion",
+    name: isTourney ? "Rival" : "Champion",
     team: Teams.pack(oppTeam),
   };
 
@@ -731,10 +747,26 @@ const championBattle = (socket, id, gymTeam, battleIndex, isTourney) => {
       if (tokens.includes("win")) {
         if (isTourney) {
           let winner;
-          if (tokens[tokens.length - 1] == "Rival") {
-            winner = { name: "Rival", team: gymTeam };
+          if (tokens[tokens.length - 1] != "upkeep") {
+            if (tokens[tokens.length - 1] == "Rival") {
+              winner = { name: "Rival", team: gymTeam };
+            } else {
+              winner = players[pIndex(tokens[tokens.length - 1])];
+            }
           } else {
-            winner = players[pIndex(tokens[tokens.length - 1])];
+            if (
+              tokens[tokens.length - 2].replace(/(?:\r\n|\r|\n)/g, "") ==
+              "Rival"
+            ) {
+              winner = { name: "Rival", team: gymTeam };
+            } else {
+              winner =
+                players[
+                  pIndex(
+                    tokens[tokens.length - 2].replace(/(?:\r\n|\r|\n)/g, "")
+                  )
+                ];
+            }
           }
           tourneyWinners[battleIndex] = winner;
           tournamentData.winners[tournamentData.currentRound][battleIndex] =

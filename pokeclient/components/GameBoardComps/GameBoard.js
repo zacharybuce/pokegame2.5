@@ -10,8 +10,6 @@ import BagDrawer from "./BagComps/BagDrawer";
 import ShopDialog from "./ShopComps/ShopDialog";
 import ActionDialog from "./ActionDialogComps/ActionDialog";
 import { useSnackbar } from "notistack";
-import IndicatorDialog from "./IndicatiorDialogComps/IndicatorDialog";
-import PvpDialog from "./PvpDialog";
 import TradeDialog from "./TradeDialogComps/TradeDialog";
 import SettingsButton from "./SettingsButton";
 import TournamentDialog from "./TournamentComps/TournamentDialog";
@@ -822,6 +820,113 @@ const testMon7 = {
   fainted: false,
   id: "ho-oh",
   dragId: "1662733634335",
+};
+
+const testMon8 = {
+  species: "Teddiursa",
+  num: "216",
+  learnset: [
+    {
+      move: "babydolleyes",
+      level: "1",
+    },
+    {
+      move: "covet",
+      level: "1",
+    },
+    {
+      move: "faketears",
+      level: "1",
+    },
+    {
+      move: "fling",
+      level: "1",
+    },
+    {
+      move: "lick",
+      level: "1",
+    },
+    {
+      move: "scratch",
+      level: "1",
+    },
+    {
+      move: "furyswipes",
+      level: "8",
+    },
+    {
+      move: "feintattack",
+      level: "15",
+    },
+    {
+      move: "sweetscent",
+      level: "22",
+    },
+    {
+      move: "playnice",
+      level: "25",
+    },
+    {
+      move: "slash",
+      level: "29",
+    },
+    {
+      move: "charm",
+      level: "36",
+    },
+    {
+      move: "rest",
+      level: "43",
+    },
+    {
+      move: "snore",
+      level: "43",
+    },
+    {
+      move: "thrash",
+      level: "50",
+    },
+  ],
+  evolveCandies: 8,
+  levelUpCandies: 5,
+  levelUpIncrease: 3,
+  level: 50,
+  ability: "Pickup",
+  nature: "Impish",
+  gender: "M",
+  types: ["Normal"],
+  item: "",
+  moves: ["slash", "babydolleyes", "lick", "scratch"],
+  evs: {
+    hp: 0,
+    atk: 0,
+    def: 0,
+    spa: 0,
+    spd: 0,
+    spe: 0,
+  },
+  ivs: {
+    hp: 30,
+    atk: 21,
+    def: 21,
+    spa: 4,
+    spd: 13,
+    spe: 22,
+  },
+  baseStats: {
+    hp: 60,
+    atk: 80,
+    def: 50,
+    spa: 50,
+    spd: 50,
+    spe: 40,
+  },
+  isShiny: false,
+  candiesSpent: 0,
+  exhaustion: 0,
+  fainted: false,
+  id: "teddiursa",
+  dragId: "1663327983103",
 };
 
 const GameBoard = ({

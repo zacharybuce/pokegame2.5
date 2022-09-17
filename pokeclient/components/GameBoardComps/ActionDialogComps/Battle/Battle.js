@@ -78,6 +78,7 @@ const Battle = ({
   const [trapped, setTrapped] = useState(false);
   const [entranceAnim, setEntranceAnim] = useState(true);
   const [willMegaEvo, setWillMegaEvo] = useState(false);
+  const [catchAnim, setCatchAnim] = useState(false);
   //---Use Effects-------------------
   useEffect(() => {
     startBattle();
@@ -393,7 +394,7 @@ const Battle = ({
       }
     }
 
-    setTimeout(() => setAnimsDone(true), delay);
+    if (delay != 300) setTimeout(() => setAnimsDone(true), delay);
 
     delay = 300;
     change = 1;
@@ -772,22 +773,53 @@ const Battle = ({
     const json = await res.json();
 
     if (json.data.caught) {
-      setLog((prev) => [
-        ...prev,
-        { message: "The pokemon was caught!", severity: "success" },
-      ]);
-      setTimeout(() => endBattle(true, team, true), 1000);
+      shakePokeball(4, ball);
+      setTimeout(
+        () =>
+          setLog((prev) => [
+            ...prev,
+            { message: "The pokemon was caught!", severity: "success" },
+          ]),
+        5000
+      );
+      setTimeout(() => endBattle(true, team, true), 6000);
     } else {
-      //shakePokeball(json.data.shakes);
-      setLog((prev) => [
-        ...prev,
-        { message: "The pokemon broke out!", severity: "error" },
-      ]);
+      shakePokeball(json.data.shakes, ball);
+      setTimeout(
+        () =>
+          setLog((prev) => [
+            ...prev,
+            { message: "The pokemon broke out!", severity: "error" },
+          ]),
+        json.data.shakes * 1000 + 1000
+      );
     }
   };
 
   const runFromBattle = () => {
     endBattle(false, team, false, true);
+  };
+
+  const shakePokeball = (shakes, ballType) => {
+    let animName;
+
+    switch (shakes) {
+      case 1:
+        animName = "oneshake";
+        break;
+      case 2:
+        animName = "twoshake";
+        break;
+      case 3:
+        animName = "threeshake";
+        break;
+      case 4:
+        animName = "fourshake";
+        break;
+    }
+
+    setCatchAnim({ anim: animName, ball: ballType });
+    if (shakes != 4) setTimeout(() => setCatchAnim(undefined), shakes * 1000);
   };
 
   return (
@@ -821,6 +853,7 @@ const Battle = ({
                   fieldEffectsP1={fieldEffectsP1}
                   fieldEffectsP2={fieldEffectsP2}
                   isPlayer1={isPlayer1}
+                  catchAnim={catchAnim}
                 />
               ) : (
                 ""

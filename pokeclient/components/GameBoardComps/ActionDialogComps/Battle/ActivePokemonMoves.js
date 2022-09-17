@@ -58,7 +58,8 @@ const ActivePokemonMoves = ({
               </Grid>
               {/* Run Button */}
               <Grid item xs={12} sx={{ textAlign: "center" }}>
-                {battletype == "wildbattle" ? (
+                {battletype == "wildbattle" &&
+                team.side.pokemon[0].ability == "runaway" ? (
                   <Button variant="outlined" onClick={() => runFromBattle()}>
                     Run
                   </Button>

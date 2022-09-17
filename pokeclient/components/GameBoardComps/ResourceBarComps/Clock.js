@@ -11,7 +11,7 @@ const Clock = ({ startTimer, setWillPvpBattle, setStartTimer }) => {
       let myInterval = setInterval(() => {
         if (startTimer) {
           setTime((prev) => {
-            if (prev == 10 || prev == 2400 || prev == 3600) {
+            if (prev == 1200 || prev == 2400 || prev == 3600) {
               console.log("trigger tournament");
               setStartTimer(false);
               setWillPvpBattle(true);

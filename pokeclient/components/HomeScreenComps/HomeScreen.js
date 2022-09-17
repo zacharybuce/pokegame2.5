@@ -1,8 +1,9 @@
-import { Button, Grid, Box } from "@mui/material";
-import React from "react";
+import { Button, Grid, Box, TextField } from "@mui/material";
+import React, { useState, useEffect } from "react";
 import { styled } from "@mui/material/styles";
 import { useSnackbar } from "notistack";
 import { useSocket } from "../../contexts/SocketProvider";
+import useLocalStorage from "../../hooks/useLocalStorage";
 
 const TitleContainer = styled("div")(({ theme }) => ({
   [theme.breakpoints.up("xs")]: {
@@ -27,17 +28,25 @@ const HomeScreenContainer = styled("div")(({ theme }) => ({
 const HomeScreen = ({
   setTrainerDialogOpen,
   id,
+  serverIp,
   setScreen,
   setSettingsDialogOpen,
   sprite,
   setMusicEvent,
+  setServerIp,
 }) => {
   const { enqueueSnackbar } = useSnackbar();
   const socket = useSocket();
+  const [ipFieldVal, setIpFieldVal] = useState();
+  const [prevIp, setPrevIp] = useLocalStorage("ip", null);
 
   const playButtonClick = () => {
     if (!id)
       enqueueSnackbar(`No id found...`, {
+        variant: "error",
+      });
+    else if (!serverIp)
+      enqueueSnackbar(`Must enter an ip`, {
         variant: "error",
       });
     else {
@@ -49,10 +58,29 @@ const HomeScreen = ({
   };
 
   const continueButtonClick = () => {
-    setScreen("ContinueLobby");
-    setMusicEvent("lobby");
-    socket.emit("join-lobby-continue", sprite);
+    if (!id)
+      enqueueSnackbar(`No id found...`, {
+        variant: "error",
+      });
+    else if (!serverIp)
+      enqueueSnackbar(`Must enter an ip`, {
+        variant: "error",
+      });
+    else {
+      setScreen("ContinueLobby");
+      setMusicEvent("lobby");
+      socket.emit("join-lobby-continue", sprite);
+    }
   };
+
+  const connectButtonClick = () => {
+    setServerIp(ipFieldVal);
+    setPrevIp(ipFieldVal);
+  };
+
+  useEffect(() => {
+    setIpFieldVal(prevIp);
+  }, []);
 
   return (
     <HomeScreenContainer>
@@ -60,24 +88,65 @@ const HomeScreen = ({
         <Grid item xs={12} sx={{ mb: "2vh" }}>
           <TitleContainer>PokeQuest</TitleContainer>
         </Grid>
-        <Grid item xs={12} sx={{ ml: "4vw", mr: "4vw" }}>
-          <Button
-            fullWidth
-            variant="contained"
-            onClick={() => playButtonClick()}
+
+        {!serverIp ? (
+          <Grid item container xs={12} sx={{ ml: "8vw", mr: "8vw", mb: "2vh" }}>
+            <Grid item xs={10}>
+              <TextField
+                id="outlined-basic"
+                label="Server IP"
+                variant="outlined"
+                autoComplete="off"
+                fullWidth
+                value={ipFieldVal}
+                onChange={(event) => setIpFieldVal(event.target.value)}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item container alignItems="center" xs={2}>
+              <Button
+                variant="contained"
+                fullWidth
+                onClick={() => connectButtonClick()}
+                sx={{ height: "100%" }}
+              >
+                Connect
+              </Button>
+            </Grid>
+          </Grid>
+        ) : (
+          ""
+        )}
+        {serverIp ? (
+          <Grid
+            item
+            container
+            xs={12}
+            sx={{ ml: "4vw", mr: "4vw" }}
+            spacing={1}
           >
-            Play
-          </Button>
-        </Grid>
-        <Grid item xs={12} sx={{ ml: "4vw", mr: "4vw" }}>
-          <Button
-            fullWidth
-            variant="contained"
-            onClick={() => continueButtonClick()}
-          >
-            Continue
-          </Button>
-        </Grid>
+            <Grid item xs={12}>
+              <Button
+                fullWidth
+                variant="contained"
+                onClick={() => playButtonClick()}
+              >
+                Play
+              </Button>
+            </Grid>
+            <Grid item xs={12}>
+              <Button
+                fullWidth
+                variant="contained"
+                onClick={() => continueButtonClick()}
+              >
+                Continue
+              </Button>
+            </Grid>
+          </Grid>
+        ) : (
+          ""
+        )}
         <Grid item xs={6}>
           <Button
             onClick={() => setTrainerDialogOpen(true)}

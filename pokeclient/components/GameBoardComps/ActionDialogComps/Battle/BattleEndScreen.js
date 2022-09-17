@@ -1,9 +1,6 @@
-import { Box, Typography, Fade, Divider, Button, Grid } from "@mui/material";
-import React from "react";
-import Cookie from "@mui/icons-material/Cookie";
-import CurrencyYen from "@mui/icons-material/CurrencyYen";
+import { Box, Typography, Divider, Button, Grid } from "@mui/material";
+import React, { useState, useEffect } from "react";
 import { pSBC } from "../../../Utils/colorUtil";
-import ItemSprite from "../../../Utils/ItemSprite";
 import BattleReward from "./BattleReward";
 
 const BattleEndScreen = ({ rewards, closeDialog }) => {
@@ -39,12 +36,28 @@ const BattleEndScreen = ({ rewards, closeDialog }) => {
             ml: "25%",
           }}
         >
-          {Object.keys(rewards).map((key, index) => {
-            if (index != 0)
-              return (
-                <BattleReward reward={rewards[key]} index={index} type={key} />
-              );
-          })}
+          {rewards.money != undefined ? (
+            <BattleReward reward={rewards.money} index={0} type={"money"} />
+          ) : (
+            ""
+          )}
+          {rewards.candies != undefined ? (
+            <BattleReward reward={rewards.candies} index={1} type={"candies"} />
+          ) : (
+            ""
+          )}
+          {rewards.items != undefined
+            ? rewards.items.map((item, i) => {
+                return (
+                  <BattleReward
+                    reward={item}
+                    index={i + 2}
+                    type={"item"}
+                    key={Math.floor(Math.random() * 100000)}
+                  />
+                );
+              })
+            : ""}
         </Grid>
       </Box>
       <Button

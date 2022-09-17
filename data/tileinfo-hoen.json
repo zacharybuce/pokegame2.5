@@ -639,7 +639,7 @@
   "abandonedship": {
     "name": "Abandoned Ship",
     "desc": "The Abandoned Ship is a tattered, old ship that looks like it could carry passengers and cargo when it was in operation. This old ship has many rusted holes, broken doors and items of furniture scattered around rooms.",
-    "encounters": ["Binacle", "Slowpoke", "Mimikyu", "Rotom", "Kyogre"],
+    "encounters": ["Dhelmise", "Slowpoke", "Mimikyu", "Rotom", "Kyogre"],
     "encounterRates": [25, 25, 25, 24, 1],
     "trainers": ["Sailor", "CoolTrainer", "Swimmer"],
     "img": "AbandonedShip",

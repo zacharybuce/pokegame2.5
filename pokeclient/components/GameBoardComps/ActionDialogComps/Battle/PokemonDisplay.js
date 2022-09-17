@@ -3,9 +3,16 @@ import React from "react";
 import FieldEffectsDisplay from "./FieldEffectsDisplay";
 import PokemonGif from "./PokemonGif";
 import HealthBar from "./HealthBar";
-import BattleCircle from "./BattleCircle";
+import ItemSprite from "../../../Utils/ItemSprite";
 
-const PokemonDisplay = ({ pokemon, health, status, fieldEffects, isOpp }) => {
+const PokemonDisplay = ({
+  pokemon,
+  health,
+  status,
+  fieldEffects,
+  isOpp,
+  catchAnim,
+}) => {
   if (isOpp)
     return (
       <Grid item container xs={12}>
@@ -39,9 +46,14 @@ const PokemonDisplay = ({ pokemon, health, status, fieldEffects, isOpp }) => {
             },
           }}
         >
-          {/* <BattleCircle /> */}
           <Box sx={{ zIndex: 1 }}>
-            <PokemonGif name={pokemon.name} isShiny={pokemon.isShiny} isOpp />
+            {!catchAnim ? (
+              <PokemonGif name={pokemon.name} isShiny={pokemon.isShiny} isOpp />
+            ) : (
+              <Box className={catchAnim.anim}>
+                <ItemSprite item={{ id: catchAnim.ball, type: "ball" }} />
+              </Box>
+            )}
           </Box>
         </Grid>
         <Grid item xs={1}>

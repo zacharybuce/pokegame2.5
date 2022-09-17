@@ -12,6 +12,7 @@ const FieldDisplay = ({
   fieldEffectsP1,
   fieldEffectsP2,
   isPlayer1,
+  catchAnim,
 }) => {
   return (
     <Grid container sx={{ mt: "2vh" }}>
@@ -21,6 +22,7 @@ const FieldDisplay = ({
         health={isPlayer1 ? p2PokeHealth : p1PokeHealth}
         status={isPlayer1 ? p2PokeStatus : p1PokeStatus}
         fieldEffects={isPlayer1 ? fieldEffectsP2 : fieldEffectsP1}
+        catchAnim={catchAnim}
       />
       <PokemonDisplay
         pokemon={isPlayer1 ? p1ActivePoke : p2ActivePoke}

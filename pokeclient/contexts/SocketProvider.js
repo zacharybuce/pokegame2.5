@@ -7,17 +7,19 @@ export function useSocket() {
   return useContext(SocketContext);
 }
 
-export function SocketProvider({ id, children }) {
+export function SocketProvider({ id, ip, children }) {
   const [socket, setSocket] = useState();
 
   useEffect(() => {
-    const newSocket = io(process.env.NEXT_PUBLIC_SERVER_URL, {
+    if (!ip) return;
+
+    const newSocket = io(`http://${ip}:3001`, {
       query: { id },
     });
     setSocket(newSocket);
 
     return () => newSocket.close();
-  }, [id]);
+  }, [id, ip]);
 
   return (
     <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>

@@ -166,7 +166,7 @@ const TestBoardComp = ({
   }, [x, y]);
 
   return (
-    <Box className={styles.test} onKeyDown={() => console.log(e.keycode)}>
+    <Box className={styles.test}>
       <HexGrid
         width={width}
         height={height / 1.3}

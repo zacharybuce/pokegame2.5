@@ -11519,7 +11519,7 @@
     ],
     "evolveCandies": 9,
     "levelUpCandies": 5,
-    "levelUpIncrease": 2
+    "levelUpIncrease": 3
   },
   "Riolu": {
     "species": "Riolu",
@@ -18933,8 +18933,8 @@
       { "move": "doubleedge", "level": "48" }
     ],
     "evolveCandies": "MAX",
-    "levelUpCandies": 1,
-    "levelUpIncrease": 8
+    "levelUpCandies": 4,
+    "levelUpIncrease": 3
   },
   "Mareanie": {
     "species": "Mareanie",

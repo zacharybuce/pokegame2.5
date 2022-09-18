@@ -890,6 +890,7 @@ const Battle = ({
                       team={team}
                       trapped={trapped}
                       animsDone={animsDone}
+                      hasSelected={hasSelected}
                       sendSwitchChoice={sendSwitchChoice}
                     />
                   ) : (

@@ -2,14 +2,20 @@ import { Grid, Typography, Box, Divider } from "@mui/material";
 import React from "react";
 import SwitchButton from "./SwitchButton";
 
-const SwitchPanel = ({ team, trapped, sendSwitchChoice, animsDone }) => {
+const SwitchPanel = ({
+  team,
+  trapped,
+  sendSwitchChoice,
+  animsDone,
+  hasSelected,
+}) => {
   if (animsDone)
     return (
       <Box>
         <Typography variant="h6">Team</Typography>
         <Divider sx={{ backgroundColor: "#ededed", mb: "5px" }} />
         <Grid container>
-          {!trapped ? (
+          {!trapped && !hasSelected ? (
             team.side.pokemon.map((poke, index) => {
               return (
                 <SwitchButton
@@ -22,9 +28,13 @@ const SwitchPanel = ({ team, trapped, sendSwitchChoice, animsDone }) => {
             })
           ) : (
             <Box>
-              <Typography color="error">
-                Cant Switch! The Active Pokemon is Trapped!
-              </Typography>
+              {trapped ? (
+                <Typography>
+                  Cant Switch! The Active Pokemon is Trapped!
+                </Typography>
+              ) : (
+                <Typography>Waiting for other player...</Typography>
+              )}
             </Box>
           )}
         </Grid>

@@ -37,7 +37,7 @@ const ActionDialog = ({
   const [rewards, setRewards] = useState();
   const [oppTeam, setOppTeam] = useState();
   const [releaseDialog, setReleaseDialog] = useState();
-  const pickupChance = 40;
+  const pickupChance = 25;
 
   useEffect(() => {
     if ((action != "starter") & (action != "none")) socket.emit("in-action");
